@@ -68,6 +68,11 @@ def requests_per_host():
     top_10 = top_10_hosts(ip_counter)
     return jsonify(top_10)
 
+@app.route("/status_codes")
+def status_codes():
+    _, status_code_counter = parse_logfile(logfile_path)
+    status_codes_info = status_codes_per_category(status_code_counter)
+    return jsonify(status_codes_info)
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8080)
