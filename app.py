@@ -10,20 +10,36 @@ logfile_path = "NASA_access_log_Jul95"
 def parse_logfile(logfile_path):
     ip_counter = Counter()
     status_code_counter = {"2xx": Counter(), "3xx": Counter(), "4xx": Counter(), "5xx": Counter()}
-    
+
     with open(logfile_path, "rb") as file:
         for line in file:
+            try:
+                line = line.decode("ascii")
+            except UnicodeDecodeError:
+                continue
             # Extracting IP/Host and Status code
             ip_match = re.search(r'^(\S+)', line)
+            status_code_match = re.search(r'\" \d{3}', line)
 
             if ip_match:
                 ip = ip_match.group(1)
+                status_code = int(status_code_match.group(0)[2:])
 
                 # Counting requests per IP/Host
                 ip_counter[ip] += 1
 
+                # Counting status codes per category
+                if 200 <= status_code < 300:
+                    status_code_counter["2xx"][ip] += 1
+                elif 300 <= status_code < 400:
+                    status_code_counter["3xx"][ip] += 1
+                elif 400 <= status_code < 500:
+                    status_code_counter["4xx"][ip] += 1
+                elif 500 <= status_code < 600:
+                    status_code_counter["5xx"][ip] += 1
 
-    return ip_counter
+
+    return ip_counter, status_code_counter
 
 
 def all_nodes(ip_counter):
