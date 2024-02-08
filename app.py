@@ -11,7 +11,7 @@ logfile_path = "NASA_access_log_Jul95"
 # Function to parse the log file and extract requested information
 def parse_logfile(logfile_path):
     ip_counter = Counter()
-#    status_code_counter = {"2xx": Counter(), "3xx": Counter(), "4xx": Counter(), "5xx": Counter()}
+# status_code_counter = {"2xx": Counter(), "3xx": Counter(), "4xx": Counter(), "5xx": Counter()}
     date_format = "%d/%b/%Y"
     status_code_counter = defaultdict(lambda: {"2xx": 0, "3xx": 0, "4xx": 0, "5xx": 0})
 
@@ -43,7 +43,7 @@ def parse_logfile(logfile_path):
     return ip_counter, dict(status_code_counter)
 
 def get_category(status_code):
-    if 200 <= status_code < 300:
+    if   200 <= status_code < 300:
         return "2xx"
     elif 300 <= status_code < 400:
         return "3xx"
