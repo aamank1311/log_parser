@@ -21,7 +21,7 @@ def parse_logfile(logfile_path):
             ip_match = re.search(r'^(\S+)', line)
             status_code_match = re.search(r'\" \d{3}', line)
 
-            if ip_match:
+            if ip_match and status_code_match:
                 ip = ip_match.group(1)
                 status_code = int(status_code_match.group(0)[2:])
 
@@ -42,25 +42,19 @@ def parse_logfile(logfile_path):
     return ip_counter, status_code_counter
 
 
-def all_nodes(ip_counter):
-    return (ip_counter)
-
-
 def top_10_hosts(ip_counter):
     # Sort the dictionary based on values in descending order
     sorted_hosts = sorted(ip_counter.items(), key=lambda item: item[1], reverse=True)[:10]
     return sorted_hosts
 
+# Function to get status codes per category
+def status_codes_per_category(status_code_counter):
+    return {category: dict(counter) for category, counter in status_code_counter.items()}
+
 
 @app.route("/")
 def index():
-    return "Welcome to Logfile Parser!"
-
-@app.route("/total")
-def total():
-    ip_counter, _ = parse_logfile(logfile_path)
-    total = all_nodes(ip_counter)
-    return jsonify(total)
+    return "Welcome to the Logfile Parser platform!"
 
 @app.route("/requests_per_host")
 def requests_per_host():
