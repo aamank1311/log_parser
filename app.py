@@ -1,6 +1,8 @@
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from flask import Flask, jsonify
+from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -9,7 +11,10 @@ logfile_path = "NASA_access_log_Jul95"
 # Function to parse the log file and extract requested information
 def parse_logfile(logfile_path):
     ip_counter = Counter()
-    status_code_counter = {"2xx": Counter(), "3xx": Counter(), "4xx": Counter(), "5xx": Counter()}
+#    status_code_counter = {"2xx": Counter(), "3xx": Counter(), "4xx": Counter(), "5xx": Counter()}
+    date_format = "%d/%b/%Y"
+    status_code_counter = defaultdict(lambda: {"2xx": 0, "3xx": 0, "4xx": 0, "5xx": 0})
+
 
     with open(logfile_path, "rb") as file:
         for line in file:
@@ -17,44 +22,45 @@ def parse_logfile(logfile_path):
                 line = line.decode("ascii")
             except UnicodeDecodeError:
                 continue
-            # Extracting IP/Host and Status code
+            # Extracting IP/Host, Status code and Date
             ip_match = re.search(r'^(\S+)', line)
             status_code_match = re.search(r'\" \d{3}', line)
+            date_match = re.search(r'\[([^:]+):', line)
 
             if ip_match and status_code_match:
                 ip = ip_match.group(1)
                 status_code = int(status_code_match.group(0)[2:])
+                date_str = date_match.group(1)
+                log_date = datetime.strptime(date_str, date_format).date()
 
                 # Counting requests per IP/Host
                 ip_counter[ip] += 1
 
-                # Counting status codes per category
-                if 200 <= status_code < 300:
-                    status_code_counter["2xx"][ip] += 1
-                elif 300 <= status_code < 400:
-                    status_code_counter["3xx"][ip] += 1
-                elif 400 <= status_code < 500:
-                    status_code_counter["4xx"][ip] += 1
-                elif 500 <= status_code < 600:
-                    status_code_counter["5xx"][ip] += 1
+                if log_date.month == 7 and log_date.day >= 1 and log_date.day <= 7:
+                    category = get_category(status_code)
+                    status_code_counter[log_date.day][category] += 1
 
+    return ip_counter, dict(status_code_counter)
 
-    return ip_counter, status_code_counter
-
+def get_category(status_code):
+    if 200 <= status_code < 300:
+        return "2xx"
+    elif 300 <= status_code < 400:
+        return "3xx"
+    elif 400 <= status_code < 500:
+        return "4xx"
+    elif 500 <= status_code < 600:
+        return "5xx"
 
 def top_10_hosts(ip_counter):
     # Sort the dictionary based on values in descending order
     sorted_hosts = sorted(ip_counter.items(), key=lambda item: item[1], reverse=True)[:10]
     return sorted_hosts
 
-# Function to get status codes per category
-def status_codes_per_category(status_code_counter):
-    return {category: dict(counter) for category, counter in status_code_counter.items()}
-
-
 @app.route("/")
 def index():
     return "Welcome to the Logfile Parser platform!"
+
 
 @app.route("/requests_per_host")
 def requests_per_host():
@@ -65,9 +71,8 @@ def requests_per_host():
 @app.route("/status_codes")
 def status_codes():
     _, status_code_counter = parse_logfile(logfile_path)
-    status_codes_info = status_codes_per_category(status_code_counter)
-    return jsonify(status_codes_info)
+    return jsonify(status_code_counter)
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='localhost', port=8080)
 
