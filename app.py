@@ -73,5 +73,5 @@ def status_codes():
     return jsonify(status_code_counter)
 
 if __name__ == "__main__":
-    app.run(debug=True, host='localhost', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8080)
 
