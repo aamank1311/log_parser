@@ -27,7 +27,7 @@ spec:
       containers:
       - image: aamank8068/log-pipeline:latest
         imagePullPolicy: IfNotPresent
-        name: log-parser-cdrwn
+        name: log-parser
         resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
