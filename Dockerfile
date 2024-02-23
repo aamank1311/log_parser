@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN pip install --no-cache-dir Flask==2.1.3 Werkzeug==2.0.2 gunicorn==20.1.0
+RUN pip install --no-cache-dir requirements.txt
 
 # Expose the port on which your Flask app runs
 EXPOSE 8080
