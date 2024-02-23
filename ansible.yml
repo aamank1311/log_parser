@@ -1,6 +1,10 @@
 - hosts: node
   become: true
   tasks:
+    - name: delete old deploy
+      command: kubectl delete -f /home/ubuntu/deploy.yaml
+    - name: delete old svc
+      command: kubectl delete -f /home/ubuntu/svc.yaml
     - name: create deployment
       command: kubectl apply -f /home/ubuntu/deploy.yaml
     - name: create svc
