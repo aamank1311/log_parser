@@ -1,0 +1,58 @@
+node {
+    stage  ('Git Checkout') {
+        git branch: 'main', url: 'https://github.com/aamank1311/log_parser.git'
+    }
+    stage  ('sending Dockerfile'){
+        sshagent(['ansible_Kontihene']) {
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8'
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 mkdir -p /home/ubuntu/app'
+            sh 'scp  /var/lib/jenkins/workspace/log-pipeline/app.py ubuntu@10.0.0.8:/home/ubuntu/app'
+            sh 'scp  /var/lib/jenkins/workspace/log-pipeline/Dockerfile ubuntu@10.0.0.8:/home/ubuntu/app'
+        }
+    }
+    stage  ('Build Docker_image'){
+        sshagent(['ansible_Kontihene']) {
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 cd /home/ubuntu/app'
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker image build -t $JOB_NAME:v1.$BUILD_ID /home/ubuntu/app/'
+        }
+    }
+    stage  ('Tag Docker_image'){
+        sshagent(['ansible_Kontihene']) {
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 cd /home/ubuntu/app'
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker image tag $JOB_NAME:v1.$BUILD_ID aamank8068/$JOB_NAME:v1.$BUILD_ID'
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker image tag $JOB_NAME:v1.$BUILD_ID aamank8068/$JOB_NAME:latest'
+        }
+    }
+    stage  ('push Docker_image'){
+        sshagent(['ansible_Kontihene']) {
+        withCredentials([string(credentialsId: 'dock_hub_access', variable: 'dock_hub_access')]) {
+        sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker login -u aamank8068 -p $dock_hub_access"
+        sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker image push aamank8068/$JOB_NAME:v1.$BUILD_ID"
+        sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 sudo docker image push aamank8068/$JOB_NAME:latest"
+        }
+        }
+    }
+    stage  ('deploy and svc to K8s'){
+        sshagent(['K8s_login']) {
+        sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.14'
+        sh 'scp /var/lib/jenkins/workspace/log-pipeline/deploy.yaml ubuntu@10.0.0.14:/home/ubuntu'
+        sh 'scp /var/lib/jenkins/workspace/log-pipeline/svc.yaml ubuntu@10.0.0.14:/home/ubuntu'
+         }
+    }
+    stage  ('copy playbook to Ansible'){
+        sshagent(['ansible_Kontihene']) {
+        sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8"
+        sh "scp -r /var/lib/jenkins/workspace/log-pipeline/ansible.yml ubuntu@10.0.0.8:/home/ubuntu"
+        
+        }
+    }
+    stage  ('deploy k8s using ansible'){
+        sshagent(['ansible_Kontihene']) {
+             sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 cd /home/ubuntu"
+             sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.8 ansible-playbook ansible.yml"
+            
+        }
+    }
+    
+    
+}
