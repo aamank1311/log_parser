@@ -2,7 +2,6 @@ import re
 from collections import Counter, defaultdict
 from flask import Flask, jsonify
 from datetime import datetime
-from app import app
 
 
 app = Flask(__name__)
@@ -74,5 +73,5 @@ def status_codes():
     return jsonify(status_code_counter)
 
 if __name__ == "__main__":
-    app.run(debug=False, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8080)
 
