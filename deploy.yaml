@@ -25,7 +25,7 @@ spec:
         app: log-parser
     spec:
       containers:
-        - image: aamank8068/log-pipeline:latest
+      - image: aamank8068/log-pipeline:latest
         imagePullPolicy: IfNotPresent
         name: log-parser-cdrwn
         resources: {}
