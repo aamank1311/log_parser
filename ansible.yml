@@ -1,0 +1,7 @@
+- hosts: node
+  become: true
+  tasks:
+    - name: create deployment
+      command: kubectl apply -f /home/ubuntu/deploy.yaml
+    - name: create svc
+      command: kubectl apply -f /home/ubuntu/svc.yaml
