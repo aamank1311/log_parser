@@ -2,6 +2,7 @@ import re
 from collections import Counter, defaultdict
 from flask import Flask, jsonify
 from datetime import datetime
+from app import app
 
 
 app = Flask(__name__)
